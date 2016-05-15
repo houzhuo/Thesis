@@ -168,8 +168,8 @@ def jieba_cut(filename,seg_filename):
     print "consume time: %f s" % (end - start)
 
 def filter_symbol():
-    new_file = file('/home/houzhuo1994cs/Documents/lda/weibo_no_punc.txt','w')
-    oldfile = open('/home/houzhuo1994cs/Documents/lda/weibo_filter_seg.txt', 'r')
+    new_file = file('/home/houzhuo1994cs/Documents/lda/neg_no_punc.txt','w')
+    oldfile = open('/home/houzhuo1994cs/Documents/lda/neg_seg.txt', 'r')
     # pattern = re.compile("[\u4e00-\u9fa5]+")
     for line in oldfile.readlines():
         line = unicode(line, 'utf-8')
@@ -208,11 +208,11 @@ def stop_word():
 
 def extract_sentiment_word():
     start = time.clock()
-    new_file = file('/home/houzhuo1994cs/Documents/lda/weibo_sentiment.txt', 'w')
-    sentiment_dict = {}.fromkeys([line.rstrip() for line in open('/home/houzhuo1994cs/Documents/lda/dic/tsinghua.positive.utf8.txt')])
+    new_file = file('/home/houzhuo1994cs/Documents/lda/neg_sentiment.txt', 'w')
+    sentiment_dict = {}.fromkeys([line.rstrip() for line in open('/home/houzhuo1994cs/Documents/lda/dic/tsinghua.negative.utf8.txt')])
     #final = ''
     # read_file = codecs.open('/home/houzhuo1994cs/Documents/lda/pos_seg_nopunc_stop.txt', 'r', 'utf8')
-    for line in open('/home/houzhuo1994cs/Documents/lda/weibo_no_punc.txt', 'r'):
+    for line in open('/home/houzhuo1994cs/Documents/lda/neg_no_punc.txt', 'r'):
         line = line.strip('\n').split(' ')
         for word in line:
             word = word.encode('utf-8')
@@ -225,62 +225,91 @@ def extract_sentiment_word():
     print "read: %f s" % (end - start)
 
 
-def add_line_number():
+def add_line_number_orLabel():
     n = 0
     start = time.clock()
-    new_file = file('/home/houzhuo1994cs/Documents/lda/weibo_sentiment_line.txt', 'w')
-    for line in open('/home/houzhuo1994cs/Documents/lda/weibo_sentiment.txt', 'r'):
+    new_file = file('/home/houzhuo1994cs/Documents/lda/neg_sentiment_no_label.txt', 'w')
+    for line in open('/home/houzhuo1994cs/Documents/lda/neg_sentiment.txt', 'r'):
         line = line.strip('\n').split(' ')
-        length = len(line)
-        n += 1
-        new_file.write(str(n)+' ')
-        for word in line:
-            new_file.write(word + " ")
-        new_file.write('\n')
+        if len(line) != 1:
+            print len(line)
+            #n += 1
+            #new_file.write(str(n)+' ')
+            for word in line:
+                new_file.write(word + " ")
+            #new_file.write('1')
+            new_file.write('\n')
     new_file.close()
 
 
 def filter_sim():
-    j = 0
-    start = time.clock()
+
     dict = {}
     content = {}
-    len_content = []
-    new_file = file('/home/houzhuo1994cs/Documents/lda/weibo_sentiment_new.txt', 'w')
-    for line in open('/home/houzhuo1994cs/Documents/lda/weibo_sentiment_line.txt', 'r'):
+
+    new_file = file('/home/houzhuo1994cs/Documents/lda/pos_nosim.txt', 'w')
+    for line in open('/home/houzhuo1994cs/Documents/lda/pos_sentiment_line.txt', 'r'):
         line = line.strip('\n').split(' ')
         num = int(line[0])
-        # print len_content
-        #dict.setdefault(num, []).append(len_content)
+        print len(line)
         dict.setdefault(num,len(line))
         content.setdefault(num,line[1:])
     print num
     for n in xrange(num):
         if dict.get(n) > 3:
-            print dict.get(n),dict.get(n+1)
+            #print dict.get(n),dict.get(n+1)
             if content.get(n):
                 if dict.get(n) != dict.get(n + 1):
-                    print content.get(n)
                     for word in content.get(n):
                         new_file.write(word + " ")
+        new_file.write("1")
         new_file.write("\n")
     new_file.close()
 
 
+
+
 def btmIndex(filename):
-    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/data.txt', 'w')
-    n = 0
+    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/pos_data.txt', 'w')
     dict = {}
-    for line in open('/home/houzhuo1994cs/PycharmProjects/LDA/btm/voca.txt','r'):
+    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/voca.txt','r'):
         lineArr = line.strip('\n').split()
         dict.setdefault(lineArr[1],lineArr[0])
-    for line in open(filename,'r'):
-        lineArr = line.strip('\n').split()
-        for word in lineArr[1:]:
+    print dict.get('问题')
+    for line2 in open(filename,'r'):
+        lineArr2 = line2.strip('\n').split()
+        for word in lineArr2:
             if dict.get(word):
                 new_file.write(dict.get(word)+ ' ')
         new_file.write('\n')
     new_file.close()
+
+def showTopic():
+    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/pos_topic.txt', 'w')
+    dict = {}
+    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/model/k10.pz_d','r'):
+        lineArr = line.strip('\n').split()
+        for index,number in enumerate(lineArr):
+            num = "%.5f" % float(number)
+            dict.setdefault(index,num)
+        t1 = sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )[0][0]
+        t2 = sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )[1][0]
+        new_file.write(str(t1)+' ')
+        new_file.write(str(t2)+' ')
+        new_file.write('\n')
+        dict.clear()
+    new_file.close()
+
+
+# def bulit_vsm():
+#     new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/svm_train.txt', 'w')
+#     n = 0
+#     dict = {}
+#     for line in open('/home/houzhuo1994cs/PycharmProjects/LDA/btm/voca.txt', 'r'):
+#         lineArr = line.strip('\n').split()
+#         dict.setdefault(lineArr[1], lineArr[0])
+#     for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/data.txt', 'r'):
+
 
 
 
@@ -288,16 +317,18 @@ def btmIndex(filename):
 
 
 if __name__ == '__main__':
-    # filename = '/home/houzhuo1994cs/Documents/lda/weibo_base_filter.txt'
-    # seg_filename = '/home/houzhuo1994cs/Documents/lda/weibo_filter_seg.txt'
+    # filename = '/home/houzhuo1994cs/Documents/lda/weibo_base_filter_neg (1).txt'
+    # seg_filename = '/home/houzhuo1994cs/Documents/lda/neg_seg.txt'
     # jieba_cut(filename,seg_filename)
 
     # filter_symbol()
 
     #stop_word()
 
-    # extract_sentiment_word()
-    # add_line_number()
+    #extract_sentiment_word()
+    #add_line_number_orLabel()
     # filter_sim()
 
-    btmIndex('/home/houzhuo1994cs/PycharmProjects/LDA/btm/origin.txt')
+    #btmIndex('/home/houzhuo1994cs/Documents/lda/pos_sentiment_no_label.txt')
+   # filter_sim()
+   showTopic()
