@@ -1,11 +1,11 @@
 #!/bin/bash
 # run an toy example for BTM
 
-K=30   # number of topics
+K=35   # number of topics
 
 alpha=`echo "scale=3;50/$K"|bc`
 beta=0.01
-niter=200
+niter=300
 save_step=501
 
 input_dir=../sample-data/

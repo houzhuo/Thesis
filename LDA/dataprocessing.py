@@ -57,8 +57,8 @@ def filter_data():
 
 
 def load_data():
-    new_file = file('C:\Users\Zhuo\Documents\weibo_base_filter.txt', 'w')
-    for line in open('C:\Users\Zhuo\Documents\weibo_base_new.txt', 'r'):
+    new_file = file('C:\Users\Zhuo\Documents\weibo_base_filter_pos.txt', 'w')
+    for line in open('C:\Users\Zhuo\Documents\pos_weibo_base_new.txt', 'r'):
         line = line.strip('\n').split('\001')
         no_name_link = filter_name_link('\001' + line[1] + '\001' + line[2])
         new_file.writelines(no_name_link + '\n')
@@ -112,7 +112,7 @@ def jieba_cut(filename):
         for word in lineArr:
             jieba.suggest_freq(word, True)
 
-    new_file_seg= file('/home/houzhuo1994cs/Documents/lda/feature/base_seg.txt', 'w')
+    new_file_seg= file('/home/houzhuo1994cs/Documents/lda/feature/neg_seg.txt', 'w')
     nfile = open(filename,'r')
     seg_doc = []
     for line in nfile.readlines():
@@ -120,7 +120,7 @@ def jieba_cut(filename):
 
         # print type(seg_list)
         seg_doc.append(" ".join(seg_list))
-    print seg_doc
+    print "==========seg finish ============="
     for doc in seg_doc:
         doc_str = doc.encode("utf-8")
         new_file_seg.writelines(doc_str)
@@ -130,8 +130,8 @@ def jieba_cut(filename):
 
     print "==========filter_symbol=========="
 
-    new_file_seg_for_extrc = open('/home/houzhuo1994cs/Documents/lda/feature/base_seg.txt')
-    no_punc_filename = '/home/houzhuo1994cs/Documents/lda/feature/base_no_punc.txt'
+    new_file_seg_for_extrc = open('/home/houzhuo1994cs/Documents/lda/feature/neg_seg.txt')
+    no_punc_filename = '/home/houzhuo1994cs/Documents/lda/feature/neg_no_punc.txt'
 
 
     new_file = file(no_punc_filename,'w')
@@ -157,7 +157,7 @@ def extract_sentiment_word():
     no_punc_file_name = jieba_cut(filename)
     #no_punc_file_name = '/home/houzhuo1994cs/Documents/lda/feature/base_no_punc.txt'
     print '==========extract sentiment========='
-    base_sentiment_file_name = '/home/houzhuo1994cs/Documents/lda/feature/base_sentiment.txt'
+    base_sentiment_file_name = '/home/houzhuo1994cs/Documents/lda/feature/neg_sentiment.txt'
     new_file = file(base_sentiment_file_name, 'w')
     sentiment_dict = {}.fromkeys([line.rstrip() for line in open('/home/houzhuo1994cs/Documents/lda/dic/sentiment_dict_new.txt')])
     for line in open(no_punc_file_name, 'r'):
@@ -180,7 +180,7 @@ def add_line_number_orLabel():
     start = time.clock()
     base_sentiment_file_name = extract_sentiment_word()
     print '==========add line ========='
-    base_sentiment_line = '/home/houzhuo1994cs/Documents/lda/feature/base_sentiment_line.txt'
+    base_sentiment_line = '/home/houzhuo1994cs/Documents/lda/feature/neg_sentiment_line.txt'
     new_file = file(base_sentiment_line, 'w')
     for line in open(base_sentiment_file_name, 'r'):
         line = line.strip('\n').split(' ')
@@ -202,12 +202,12 @@ def filter_sim():
     content = {}
     base_sentiment_line = add_line_number_orLabel()
     print '==========filter sim========='
-    sentiment_nosim_name = '/home/houzhuo1994cs/Documents/lda/feature/sentiment_nosim.txt'
+    sentiment_nosim_name = '/home/houzhuo1994cs/Documents/lda/feature/neg_sentiment_nosim.txt'
     new_file = file(sentiment_nosim_name, 'w')
     for line in open(base_sentiment_line, 'r'):
         line = line.strip('\n').split(' ')
         num = int(line[0])
-        print len(line)
+        # print len(line)
         dict.setdefault(num,len(line))
         content.setdefault(num,line[1:])
     for n in xrange(num):
@@ -220,19 +220,45 @@ def filter_sim():
         #new_file.write("1")
         new_file.write("\n")
     new_file.close()
+
     return sentiment_nosim_name
 
+def delet_blankline():
+    filename = filter_sim()
+    print '========delet blankline=========='
+    #filename = '/home/houzhuo1994cs/Documents/lda/feature/sentiment_nosim.txt'
+    new_filename = '/home/houzhuo1994cs/Documents/lda/feature/neg_sentiment_noline.txt'
+    new_file = file(new_filename, 'w')
+    fr = open(filename)
+    for line in fr.readlines():
+        lineArr = line.strip().split(' ')
+        #print len(lineArr[0])
+        if len(lineArr[0]) != 0:
+            for word in lineArr:
+                word = word.encode('utf8')
+                new_file.write(word + ' ')
+            new_file.write("\n")
+    fr.close()
+    new_file.close()
+    return new_filename
+#for corpus:
+#1.delet_blankline()
+#2.copy to doc_info
+#3.run sh --> voca.txt
 
+##for neg or pos:(don not forget add -1)
+#1.delet_blankline()
+#2.btmIndex()
+#3.run single sh commond
+#4.topicshow(),generate()
 
 def btmIndex():
-    #filename = filter_sim()
-    filename = '/home/houzhuo1994cs/Documents/lda/feature/sentiment_nosim.txt'
-    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/data.txt', 'w')
+    filename = '/home/houzhuo1994cs/Documents/lda/feature/neg_sentiment_noline.txt'
+    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/neg_data.txt', 'w')
     dict = {}
     for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/voca.txt','r'):
         lineArr = line.strip('\n').split()
         dict.setdefault(lineArr[1],lineArr[0])
-    print dict.get('问题')
     for line2 in open(filename,'r'):
         lineArr2 = line2.strip('\n').split()
         for word in lineArr2:
@@ -242,15 +268,18 @@ def btmIndex():
     new_file.close()
 
 def showTopic():
-    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/pos_topic.txt', 'w')
+
+    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/neg_topic.txt', 'w')
     dict = {}
-    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/model/k10.pz_d','r'):
+    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/model/k40.pz_d','r'):
         lineArr = line.strip('\n').split()
         for index,number in enumerate(lineArr):
             num = "%.5f" % float(number)
             dict.setdefault(index,num)
+            # print num
         t1 = sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )[0][0]
-        t2 = sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )[1][0]
+        # print t1
+        # print sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )
         t2 = sorted(dict.iteritems(),key = lambda d:d[1],reverse = True )[1][0]
         t1 =  t1/1.00000
         t2 =  t2/1.00000
@@ -261,15 +290,16 @@ def showTopic():
         new_file.write('\n')
         dict.clear()
     new_file.close()
+    print "=====show topic finish====="
 
 
 def generate_Train_data():
-    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/pos_topic_label.txt', 'w')
-    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/pos_topic.txt', 'r'):
+    new_file = file('/home/houzhuo1994cs/Documents/BTM-master/output/neg_topic_label.txt', 'w')
+    for line in open('/home/houzhuo1994cs/Documents/BTM-master/output/neg_topic.txt', 'r'):
         lineArr = line.strip('\n').split()
         new_file.write(lineArr[0]+',')
         new_file.write(lineArr[1]+',')
-        new_file.write('1')
+        new_file.write('-1')
         new_file.write('\n')
     new_file.close()
 
@@ -280,20 +310,10 @@ def generate_Train_data():
 
 
 if __name__ == '__main__':
-    filename = '/home/houzhuo1994cs/Documents/lda/weibo_base_filter.txt'
-    # seg_filename = '/home/houzhuo1994cs/Documents/lda/neg_seg.txt'
-    #jieba_cut(filename)
+    filename = '/home/houzhuo1994cs/Documents/lda/weibo_base_filter_neg.txt'
 
-    # filter_symbol()
+    #delet_blankline()
+    # btmIndex()
 
-    #stop_word()
-
-    #extract_sentiment_word()
-    #add_line_number_orLabel()
-    #filter_sim()
-
-    btmIndex()
-    #filter_sim()
-   #  showTopic()
-   #  generate_Train_data()
-    #filter_sentiment_dict()
+    showTopic()
+    generate_Train_data()
